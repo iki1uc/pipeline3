@@ -26,70 +26,18 @@
   <ul>
     <li><a href="README.md">README</a></li>
     <li><a href="id.html">ID</a></li>
-
-    <!-- Matrix -->
-    <li><a href="3.csv">3 · Grundvektoren</a></li>
-    <li><a href="6.csv">6 · Funktionsachsen</a></li>
+    <li><a href="3.csv">3 · IX</a></li>
+    <li><a href="6.csv">6 · IO / OI</a></li>
     <li><a href="9.csv">9 · Normmodule</a></li>
   </ul>
 </div>
 
 <!-- Stabilisationsachse -->
 <div class="box">
-  <div class="title">PIPELINE3 · Stabilisationsachse</div>
+  <div class="title">Stabilisations-Ebenen</div>
   <pre>
-EBENE1: IX → Stabil-Vektor
-EBENE2: IO → Eingang stabilisieren
-EBENE3: Normmodul → FIT/FIX/MISS/RDY/ERROR/HELP
-EBENE4: OI → Ausgang stabilisieren
-EBENE5: NC → Greifmechanik
-EBENE6: ANKER → Systemtreue
-  </pre>
-</div>
-
-<!-- Vektor Module -->
-<div class="box">
-  <div class="title">Vektor Module (aus CSV)</div>
-  <pre>
-[ IX, Input, 1, neutral ]
-[ IO, Eingang, +Δx, aktiv ]
-[ OI, Ausgang, -Δx, stabil ]
-  </pre>
-</div>
-
-<!-- Matrix 3 / 6 / 9 -->
-<div class="box">
-  <div class="title">Matrix 3 · 6 · 9</div>
-  <pre>
-3 = Grundvektoren (IX, XI, X4)
-6 = Funktionsachsen (IO, OI, AIR, AIV, ALLIN, ALLOUT)
-9 = Normmodule (FIT, FIX, MISS, RDY, ERROR, HELP)
-  </pre>
-</div>
-
-<!-- Pipeline Übersicht -->
-<div class="box">
-  <div class="title">Pipeline Übersicht</div>
-  <pre>
-PIPELINE1 = Quelle · Zahl · Vektor
-PIPELINE2 = Fusion
-PIPELINE3 = ANKER · Stabilisation
-PIPELINE4 = Output / OI
-PIPELINE9 = Normmodul (FIT/FIX/MISS/RDY/ERROR/HELP)
-  </pre>
-</div>
-
-<!-- Status -->
-<div class="box">
-  <div class="title">Status</div>
-  <pre>
-System: aktiv
-Matrix: geladen
-Vektoren: stabil
-NC: online
-PIPELINE3: ANKER gesetzt
-  </pre>
-</div>
-
-</body>
-</html>
+EBENE 1: IX        → Input-Stabil
+EBENE 2: IO        → Funktions-Stabil
+EBENE 3: Normmodul → FIT / FIX / MISS / RDY / ERROR / HELP
+EBENE 4: OI        → Output-Stabil
+EBENE 5: NC        → GRIP / HOLD / FLOW /
