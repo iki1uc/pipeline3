@@ -5,15 +5,28 @@
 <title>PIPELINE3 · ANKER · Stabilisationsachse</title>
 
 <style>
-  body { background:#000; color:#0f0; font-family:monospace; padding:40px; }
-  h1 { color:#6cf; text-align:center; margin-bottom:30px; }
-  .box { background:#111; border:1px solid #333; padding:20px; margin-bottom:25px; }
+  body { background:#000; color:#0f0; font-family:Consolas, monospace; padding:40px; }
+  h1 { color:#6cf; text-align:center; margin-bottom:30px; text-shadow:0 0 12px #6cf; }
+  .box { background:#111; border:1px solid #333; padding:20px; margin-bottom:25px; border-radius:8px; }
   .title { color:#6cf; font-size:18px; margin-bottom:10px; }
   pre { background:#000; padding:10px; border-left:3px solid #6cf; white-space:pre-wrap; }
   ul { list-style:none; padding:0; }
   li { margin:8px 0; }
   a { color:#6cf; text-decoration:none; }
 </style>
+
+<script>
+// universeller CSV Loader
+async function loadCSV(id, file){
+    try {
+        const txt = await fetch(file).then(r => r.text());
+        document.getElementById(id).textContent = txt;
+    } catch {
+        document.getElementById(id).textContent = "Fehler: Datei nicht gefunden.";
+    }
+}
+</script>
+
 </head>
 
 <body>
@@ -26,6 +39,9 @@
   <ul>
     <li><a href="README.md">README</a></li>
     <li><a href="id.html">ID</a></li>
+   li><a href="SELF.html">SELF</a></li>
+    <li><a href="ATOM.html">ATOM</a></li>
+    <li><a href="MARKT.html">MARKT</a></li>
     <li><a href="3.csv">3 · IX</a></li>
     <li><a href="6.csv">6 · IO / OI</a></li>
     <li><a href="9.csv">9 · Normmodule</a></li>
@@ -40,4 +56,35 @@ EBENE 1: IX        → Input-Stabil
 EBENE 2: IO        → Funktions-Stabil
 EBENE 3: Normmodul → FIT / FIX / MISS / RDY / ERROR / HELP
 EBENE 4: OI        → Output-Stabil
-EBENE 5: NC        → GRIP / HOLD / FLOW /
+EBENE 5: NC        → GRIP / HOLD / FLOW / LOCK
+  </pre>
+</div>
+
+<!-- CSV Loader -->
+<div class="box">
+  <div class="title">CSV · PIPELINE3</div>
+
+  <h3>3.csv — IX</h3>
+  <pre id="csv_3">lade…</pre>
+
+  <h3>6.csv — IO / OI</h3>
+  <pre id="csv_6">lade…</pre>
+
+  <h3>9.csv — Normmodule</h3>
+  <pre id="csv_9">lade…</pre>
+
+<script>
+loadCSV("csv_3", "3.csv");
+loadCSV("csv_6", "6.csv");
+loadCSV("csv_9", "9.csv");
+</script>
+</div>
+
+<!-- PIPELINE3 Erklärung -->
+<div class="box">
+  <div class="title">PIPELINE3 — ANKER</div>
+  <pre>
+PIPELINE3 ist die ANKER-PIPELINE:
+
+- stabilisiert Input (IX)
+- stabilisiert
