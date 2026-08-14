@@ -3,9 +3,8 @@ export const P0 = {
         return {
             id: "P3:P0",
             phase: "wake",
-            source: "RAW",
+            vector: { h: 0, d: 0, g: 0 },
             core
         };
     }
 };
-
