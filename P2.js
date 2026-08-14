@@ -4,13 +4,12 @@ export const P2 = {
             id: "P3:P2",
             phase: "vectorize",
             vector: {
-                x: Math.random(),
-                y: Math.random(),
-                z: Math.random()
+                h: Math.random(),
+                d: Math.random(),
+                g: Math.random()
             },
             ready: true,
             core
         };
     }
 };
-
