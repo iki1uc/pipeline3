@@ -3,9 +3,12 @@ export const P1 = {
         return {
             id: "P3:P1",
             phase: "structure",
-            vector: { x:1, y:1, z:1 },
+            vector: {
+                h: 1,
+                d: 0.5,
+                g: 0.2
+            },
             core
         };
     }
 };
-
