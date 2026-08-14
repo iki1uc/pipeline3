@@ -1,18 +1,12 @@
 export const QI = {
     scan(obj){
         return {
-            id: obj.id || "CORE",
-            core: !!obj.core,
-            fn: !!obj.fn,
-            stable: !!obj.stable,
+            id: obj.id || "CORE3",
+            axis: obj.axis || "vertical",
+            depth: obj.depth || 0,
             ready: !!obj.ready,
-            respo: !!obj.respo360,
             time: Date.now(),
-            meta: {
-                type: typeof obj,
-                keys: Object.keys(obj)
-            }
+            keys: Object.keys(obj)
         };
     }
 };
-
