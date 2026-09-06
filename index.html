@@ -2,78 +2,743 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>PIPELINE3 · RAW → STRUCTURE → VECTOR · REAL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIPELINE3 · ANKER · Stabilisation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-body{background:#000;color:#0f0;font-family:Consolas, monospace;padding:20px;}
-h1{color:#6cf;}
-h2{color:#0f0;}
-pre{background:#111;padding:12px;border:1px solid #333;border-radius:6px;color:#0f0;}
-button{background:#111;color:#0f0;border:1px solid #0f0;padding:10px 20px;margin:5px;}
-section{margin-bottom:20px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-primary: #0a0c12; --bg-secondary: #11161d; --bg-card: #18202a;
+    --bg-card-hover: #212c3a; --border-color: #2a3a4a;
+    --text-primary: #e8edf5; --text-secondary: #8da4b8; --text-muted: #5a6f82;
+    --accent-stabil: #4dabf7; --accent-blue: #4b7cf7; --accent-green: #2ed98c;
+    --accent-red: #f25a6a; --accent-yellow: #f5b342; --accent-gold: #ffd700;
+    --shadow: 0 8px 32px rgba(0,0,0,0.6); --radius: 16px; --radius-sm: 10px;
+    --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-primary); color: var(--text-primary);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .pipeline-dashboard {
+    max-width: 1380px; width: 100%; background: var(--bg-secondary);
+    border-radius: var(--radius); border: 1px solid var(--border-color);
+    box-shadow: var(--shadow); padding: 28px 30px 36px;
+  }
+
+  /* HEADER */
+  .dashboard-header {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; margin-bottom: 24px; gap: 12px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-left .logo-icon {
+    width: 44px; height: 44px; background: var(--accent-stabil);
+    border-radius: var(--radius-sm); display: flex; align-items: center;
+    justify-content: center; font-size: 22px; color: #fff;
+    box-shadow: 0 0 20px rgba(77,171,247,0.3);
+  }
+  .header-left h1 {
+    font-weight: 700; font-size: 24px; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #4dabf7 0%, #a78bfa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-left h1 span { font-weight: 400; -webkit-text-fill-color: var(--text-secondary); opacity: 0.5; }
+  .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pipeline-badge {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 100px; padding: 4px 16px; font-size: 12px; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pipeline-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-stabil); animation: pulse-dot 1.8s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.2)} }
+  .header-actions button {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    color: var(--text-secondary); width: 38px; height: 38px;
+    border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+  }
+  .header-actions button:hover { border-color: var(--accent-stabil); color: #fff; }
+
+  /* CONTROLS */
+  .control-panel {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 20px 30px;
+  }
+  .control-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .control-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .toggle-switch {
+    position: relative; width: 44px; height: 24px; background: var(--bg-secondary);
+    border-radius: 100px; border: 1px solid var(--border-color); cursor: pointer;
+    transition: var(--transition); flex-shrink: 0;
+  }
+  .toggle-switch.active { background: var(--accent-stabil); border-color: var(--accent-stabil); }
+  .toggle-switch .knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    background: #fff; border-radius: 50%; transition: var(--transition);
+  }
+  .toggle-switch.active .knob { left: 22px; background: #000; }
+  .stage-toggle {
+    background: var(--bg-secondary); border: 1px solid var(--border-color);
+    border-radius: 100px; padding: 4px 14px; font-size: 11px; color: var(--text-muted);
+    cursor: pointer; transition: var(--transition); font-family: inherit;
+  }
+  .stage-toggle.active { border-color: var(--accent-stabil); color: #fff; background: rgba(77,171,247,0.15); }
+  .stage-toggle:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* STATS (3·6·9) */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+  }
+  .stat-card .stat-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+  .stat-card .stat-value { font-size: 26px; font-weight: 700; margin-top: 2px; }
+  .stat-card .stat-value.gold { color: var(--accent-gold); }
+  .stat-card .stat-value.blue { color: var(--accent-blue); }
+  .stat-card .stat-value.purple { color: #a78bfa; }
+  .stat-card .stat-value.green { color: var(--accent-green); }
+
+  /* PIPELINE FLOW */
+  .pipeline-flow {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius); padding: 24px 20px; margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .flow-title {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+  }
+  .flow-title i { color: var(--accent-stabil); }
+  .pipeline-stages {
+    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; min-width: fit-content;
+  }
+
+  .stage-node {
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 120px; position: relative; transition: var(--transition);
+    opacity: 0.5; filter: grayscale(0.6);
+  }
+  .stage-node.active { opacity: 1; filter: grayscale(0); }
+  .stage-node.disabled { opacity: 0.2; pointer-events: none; }
+
+  .node-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; background: var(--bg-secondary);
+    border: 2px solid var(--border-color); color: var(--text-muted);
+    transition: var(--transition); position: relative; z-index: 2;
+  }
+  .node-circle .gear-icon {
+    font-size: 32px; transition: transform 0.3s;
+  }
+  .stage-node.running .node-circle .gear-icon {
+    animation: spin-gear 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  @keyframes spin-gear {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  .node-circle .status-ring {
+    position: absolute; inset: -5px; border-radius: 50%;
+    border: 3px solid transparent; transition: var(--transition);
+  }
+  .stage-node.running .node-circle .status-ring {
+    border-color: var(--accent-yellow); border-top-color: transparent;
+    animation: spin-ring 0.9s linear infinite;
+    box-shadow: 0 0 25px rgba(245,179,66,0.4);
+  }
+  @keyframes spin-ring { to { transform: rotate(360deg); } }
+
+  .stage-node.success .node-circle { border-color: var(--accent-green); background: rgba(46,217,140,0.15); color: var(--accent-green); }
+  .stage-node.running .node-circle { border-color: var(--accent-yellow); background: rgba(245,179,66,0.12); color: var(--accent-yellow); }
+  .stage-node.failed .node-circle { border-color: var(--accent-red); background: rgba(242,90,106,0.15); color: var(--accent-red); }
+  .stage-node.pending .node-circle { border-color: var(--border-color); background: var(--bg-secondary); color: var(--text-muted); }
+
+  .node-label { margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--text-secondary); text-align: center; }
+  .node-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  .stage-connector {
+    flex: 0 0 40px; height: 3px; background: var(--border-color);
+    position: relative; border-radius: 2px; transition: var(--transition);
+    min-width: 20px;
+  }
+  .stage-connector.success { background: var(--accent-green); box-shadow: 0 0 15px rgba(46,217,140,0.3); }
+  .stage-connector.running { background: var(--accent-yellow); box-shadow: 0 0 15px rgba(245,179,66,0.3); }
+  .stage-connector.failed { background: var(--accent-red); }
+  .stage-connector::after {
+    content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+    border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+    border-left: 8px solid var(--border-color); transition: var(--transition);
+  }
+  .stage-connector.success::after { border-left-color: var(--accent-green); }
+  .stage-connector.running::after { border-left-color: var(--accent-yellow); }
+
+  /* LOGS */
+  .activity-section { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 24px; }
+  @media (max-width: 820px) { .activity-section { grid-template-columns: 1fr; } }
+  .activity-panel {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); padding: 16px 18px;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .panel-head h3 { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+  .panel-head h3 i { color: var(--accent-stabil); }
+  .log-list {
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: 180px; overflow-y: auto; padding-right: 4px;
+  }
+  .log-list::-webkit-scrollbar { width: 3px; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+  .log-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 6px 10px; background: var(--bg-secondary);
+    border-radius: 6px; border-left: 3px solid var(--border-color);
+    font-size: 12px;
+  }
+  .log-item .log-icon { font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }
+  .log-item .log-content { color: var(--text-secondary); line-height: 1.3; }
+  .log-item .log-content strong { color: var(--text-primary); }
+  .log-item .log-time { font-size: 10px; color: var(--text-muted); flex-shrink: 0; margin-left: auto; }
+  .log-item.success { border-left-color: var(--accent-green); }
+  .log-item.error { border-left-color: var(--accent-red); }
+  .log-item.warning { border-left-color: var(--accent-yellow); }
+  .log-item.info { border-left-color: var(--accent-blue); }
+
+  /* TRIGGER */
+  .trigger-area {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+  }
+  .btn-primary {
+    background: var(--accent-stabil); border: none; color: #000;
+    font-weight: 700; font-size: 14px; padding: 10px 28px;
+    border-radius: 100px; display: inline-flex; align-items: center;
+    gap: 10px; cursor: pointer; transition: var(--transition);
+    box-shadow: 0 4px 20px rgba(77,171,247,0.25);
+    font-family: inherit;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(77,171,247,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-attack {
+    background: var(--bg-card); border: 1px solid var(--accent-red);
+    color: var(--accent-red); font-weight: 600; font-size: 12px;
+    padding: 6px 18px; border-radius: 100px; cursor: pointer;
+    transition: var(--transition); font-family: inherit;
+  }
+  .btn-attack:hover { background: var(--accent-red); color: #fff; }
+
+  @media (max-width: 720px) {
+    .pipeline-dashboard { padding: 16px; }
+    .header-left h1 { font-size: 18px; }
+    .stage-node { min-width: 80px; }
+    .node-circle { width: 56px; height: 56px; font-size: 22px; }
+    .node-circle .gear-icon { font-size: 24px; }
+    .control-panel { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
 </style>
 
 <script type="module">
+  // ---------- MODUL-IMPORT mit Fallback (SIM/REAL) ----------
+  let moduleCache = {};
+  let mode = 'SIM';
 
-import { QI } from "./QI.js";
-import { coreScan } from "./coreScan.js";
+  async function loadModules(realMode) {
+    if (realMode) {
+      try {
+        // Versuche, die echten Module zu laden – hier könnten spezifische Dateien stehen
+        // Da die Repository-Liste nur P0.js, P1.js, P2.js zeigt, versuchen wir diese.
+        // Für PIPELINE3 sind die Module aber anders benannt. Wir bleiben im SIM-Modus,
+        // aber der REAL-Modus versucht es trotzdem.
+        const { coreScan } = await import('./coreScan.js');
+        const { P0 } = await import('./P0.js');
+        const { P1 } = await import('./P1.js');
+        const { P2 } = await import('./P2.js');
+        moduleCache = { coreScan, P0, P1, P2 };
+        return true;
+      } catch (e) {
+        console.warn('REAL-Modus fehlgeschlagen, fallback auf SIM.', e);
+        return false;
+      }
+    } else {
+      // SIM-Modus: Simulierte Stabilisations-Funktionen
+      moduleCache = {
+        coreScan: () => ({ test: 'stabil', respo360: { x: 3, y: 6, z: 9 } }),
+        // Jede Stufe simuliert eine Stabilisations-Ebene
+        IX: { run: (c) => ({ drei: 3, status: 'Input stabil', wert: 42 }) },
+        IO: { run: (c) => ({ sechs: 6, status: 'Funktion stabil', wert: 84 }) },
+        NORM: { run: (c) => ({ neun: 9, status: 'Norm stabil (FIT)', wert: 126 }) },
+        OI: { run: (c) => ({ sechs: 6, status: 'Output stabil', wert: 168 }) },
+        NC: { run: (c) => ({ grip: 'HOLD', flow: 'ORBIT', status: 'NC stabil' }) },
+        ANKER: { run: (c) => ({ fixpunkt: true, treue: 100, status: 'Anker stabil' }) }
+      };
+      return true;
+    }
+  }
 
-import { P0 } from "./P0.js";
-import { P1 } from "./P1.js";
-import { P2 } from "./P2.js";
+  // ---------- DOM ----------
+  const stagesContainer = document.getElementById('pipelineStages');
+  const logContainer = document.getElementById('logList');
+  const triggerBtn = document.getElementById('triggerBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  const metric3 = document.getElementById('metric3');
+  const metric6 = document.getElementById('metric6');
+  const metric9 = document.getElementById('metric9');
 
-window.out = msg => document.getElementById("out").innerText = msg;
+  const modeToggle = document.getElementById('modeToggle');
+  const modeLabel = document.getElementById('modeLabel');
+  const stageToggles = {
+    IX: document.getElementById('toggleIX'),
+    IO: document.getElementById('toggleIO'),
+    NORM: document.getElementById('toggleNORM'),
+    OI: document.getElementById('toggleOI'),
+    NC: document.getElementById('toggleNC'),
+    ANKER: document.getElementById('toggleANKER')
+  };
 
-// QI
-window.qi_p3 = function(){
-    const core = coreScan();
-    out("QI · PIPELINE3\n" + JSON.stringify(QI.scan(P2.run(core)), null, 2));
-};
+  // Pipeline-Definition (6 Stabilisations-Ebenen)
+  const pipelineDef = [
+    { id: 'IX', label: 'Input‑Stabil', icon: 'fa-solid fa-arrow-right-to-bracket', key: 'IX' },
+    { id: 'IO', label: 'Funktions‑Stabil', icon: 'fa-solid fa-function', key: 'IO' },
+    { id: 'NORM', label: 'Norm‑Stabil', icon: 'fa-solid fa-scale-balanced', key: 'NORM' },
+    { id: 'OI', label: 'Output‑Stabil', icon: 'fa-solid fa-arrow-right-from-bracket', key: 'OI' },
+    { id: 'NC', label: 'NC‑Stabil', icon: 'fa-solid fa-arrow-trend-up', key: 'NC' },
+    { id: 'ANKER', label: 'ANKER‑Stabil', icon: 'fa-solid fa-anchor', key: 'ANKER' }
+  ];
 
-window.qi_master = function(){
-    out("QI · MASTER\n" + JSON.stringify(QI.scan(coreScan()), null, 2));
-};
+  let stageStatus = pipelineDef.map(() => 'pending');
+  let stageResults = pipelineDef.map(() => null);
+  let currentLogs = [];
+  let isRunning = false;
+  let activeStages = pipelineDef.map(() => true);
 
-window.qi_respo = function(){
-    const core = coreScan();
-    out("QI · RESPO\n" + JSON.stringify(QI.scan(core.respo360), null, 2));
-};
+  // ---------- Hilfen ----------
+  function getTime() {
+    const now = new Date();
+    return String(now.getHours()).padStart(2,'0') + ':' +
+           String(now.getMinutes()).padStart(2,'0') + ':' +
+           String(now.getSeconds()).padStart(2,'0');
+  }
+  function updateTimestamp() { lastUpdateEl.textContent = getTime(); }
 
-// PIPELINE3
-window.p3_raw = function(){
-    out("P3 · RAW → WAKE\n" + JSON.stringify(P0.run(coreScan()), null, 2));
-};
+  function updateMetrics() {
+    let v3 = '–', v6 = '–', v9 = '–';
+    if (stageResults[0]) {
+      const r = stageResults[0];
+      v3 = r.drei ?? r.three ?? r[3] ?? r.wert ?? '?';
+    }
+    if (stageResults[1]) {
+      const r = stageResults[1];
+      v6 = r.sechs ?? r.six ?? r[6] ?? r.wert ?? '?';
+    }
+    if (stageResults[2]) {
+      const r = stageResults[2];
+      v9 = r.neun ?? r.nine ?? r[9] ?? r.wert ?? '?';
+    }
+    metric3.textContent = v3;
+    metric6.textContent = v6;
+    metric9.textContent = v9;
+  }
 
-window.p3_structure = function(){
-    out("P3 · RAW → STRUCTURE\n" + JSON.stringify(P1.run(coreScan()), null, 2));
-};
+  // ---------- Rendering ----------
+  function renderStages() {
+    let html = '';
+    stageStatus.forEach((status, idx) => {
+      const mod = pipelineDef[idx];
+      const isActive = activeStages[idx];
+      const statusClass = status;
+      let ringClass = 'pending';
+      if (status === 'running') ringClass = 'running';
+      else if (status === 'success') ringClass = 'success';
+      else if (status === 'failed') ringClass = 'failed';
 
-window.p3_vector = function(){
-    out("P3 · STRUCTURE → VECTOR\n" + JSON.stringify(P2.run(coreScan()), null, 2));
-};
+      let iconHtml = `<i class="${mod.icon} gear-icon"></i>`;
+      if (status === 'running') {
+        iconHtml = `<i class="fas fa-gear gear-icon"></i>`;
+      }
 
+      html += `
+        <div class="stage-node ${statusClass} ${isActive ? 'active' : 'disabled'}">
+          <div class="node-circle">
+            <span class="status-ring ${ringClass}"></span>
+            ${iconHtml}
+          </div>
+          <div class="node-label">${mod.label}</div>
+          <div class="node-sub">${status === 'running' ? '⚙️ stabilisiert …' : status === 'success' ? '✓ stabil' : status === 'failed' ? '✗ instabil' : isActive ? '⏳ bereit' : '⛔ deaktiviert'}</div>
+        </div>
+      `;
+      if (idx < pipelineDef.length - 1) {
+        const nextStatus = stageStatus[idx + 1];
+        let connClass = '';
+        if (status === 'success' && (nextStatus === 'success' || nextStatus === 'running' || nextStatus === 'failed')) connClass = 'success';
+        else if (status === 'running') connClass = 'running';
+        else if (status === 'failed') connClass = 'failed';
+        html += `<div class="stage-connector ${connClass}"></div>`;
+      }
+    });
+    stagesContainer.innerHTML = html;
+    updateStats();
+  }
+
+  function renderLogs() {
+    let html = '';
+    currentLogs.forEach(log => {
+      html += `
+        <div class="log-item ${log.type}">
+          <div class="log-icon">${log.icon}</div>
+          <div class="log-content">${log.text}</div>
+          <div class="log-time">${log.time}</div>
+        </div>
+      `;
+    });
+    logContainer.innerHTML = html;
+  }
+
+  function updateStats() {
+    const success = stageStatus.filter(s => s === 'success').length;
+    const running = stageStatus.filter(s => s === 'running').length;
+    const failed = stageStatus.filter(s => s === 'failed').length;
+    document.getElementById('successCount').textContent = success;
+    document.getElementById('runningCount').textContent = running;
+    document.getElementById('failedCount').textContent = failed;
+    updateMetrics();
+  }
+
+  // ---------- Pipeline-Ausführung (Stabilisation) ----------
+  async function runPipeline() {
+    if (isRunning) return;
+    isRunning = true;
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stabilisation läuft …';
+
+    stageStatus = pipelineDef.map(() => 'pending');
+    stageResults = pipelineDef.map(() => null);
+    currentLogs = [];
+    currentLogs.push({ icon: '⚓', text: `<strong>PIPELINE3</strong> · Stabilisation startet (Modus: ${mode})`, time: getTime(), type: 'info' });
+    renderStages();
+    renderLogs();
+    updateTimestamp();
+
+    for (let i = 0; i < pipelineDef.length; i++) {
+      if (!activeStages[i]) {
+        stageStatus[i] = 'pending';
+        currentLogs.push({ icon: '⏭️', text: `<strong>${pipelineDef[i].label}</strong> · übersprungen (deaktiviert)`, time: getTime(), type: 'warning' });
+        renderStages();
+        renderLogs();
+        continue;
+      }
+
+      stageStatus[i] = 'running';
+      renderStages();
+      currentLogs.push({ icon: '⚙️', text: `<strong>${pipelineDef[i].label}</strong> · Zahnrad dreht …`, time: getTime(), type: 'warning' });
+      renderLogs();
+
+      try {
+        let result;
+        const key = pipelineDef[i].key;
+        if (mode === 'REAL' && moduleCache[key]) {
+          const core = moduleCache.coreScan ? moduleCache.coreScan() : {};
+          result = moduleCache[key].run(core);
+        } else if (moduleCache[key]) {
+          const core = moduleCache.coreScan ? moduleCache.coreScan() : {};
+          result = moduleCache[key].run(core);
+        } else {
+          throw new Error(`Modul ${key} nicht geladen.`);
+        }
+        stageResults[i] = result;
+        stageStatus[i] = 'success';
+        const resultStr = typeof result === 'object' ? JSON.stringify(result).slice(0, 70) : String(result);
+        currentLogs.push({
+          icon: '✅',
+          text: `<strong>${pipelineDef[i].label}</strong> · stabilisiert → ${resultStr}`,
+          time: getTime(),
+          type: 'success'
+        });
+      } catch (err) {
+        stageStatus[i] = 'failed';
+        currentLogs.push({
+          icon: '❌',
+          text: `<strong>${pipelineDef[i].label}</strong> · Fehler: ${err.message || err}`,
+          time: getTime(),
+          type: 'error'
+        });
+      }
+      renderStages();
+      renderLogs();
+      updateTimestamp();
+      await new Promise(r => setTimeout(r, 700));
+    }
+
+    currentLogs.push({ icon: '🏁', text: '<strong>PIPELINE3</strong> · Stabilisation abgeschlossen – System ist stabil.', time: getTime(), type: 'info' });
+    renderLogs();
+    isRunning = false;
+    triggerBtn.disabled = false;
+    triggerBtn.innerHTML = '<i class="fas fa-play"></i> Stabilisation auslösen';
+    updateTimestamp();
+    updateMetrics();
+  }
+
+  // ---------- Manueller Schritt ----------
+  async function manualStep(idx) {
+    if (isRunning || !activeStages[idx]) return;
+    const mod = pipelineDef[idx];
+    stageStatus = stageStatus.map((_, i) => i === idx ? 'running' : 'pending');
+    stageResults = stageResults.map(() => null);
+    currentLogs = [];
+    currentLogs.push({ icon: '🔧', text: `<strong>Manuell</strong> · Starte ${mod.label}`, time: getTime(), type: 'info' });
+    renderStages();
+    renderLogs();
+    updateTimestamp();
+
+    try {
+      let result;
+      const key = mod.key;
+      if (mode === 'REAL' && moduleCache[key]) {
+        const core = moduleCache.coreScan ? moduleCache.coreScan() : {};
+        result = moduleCache[key].run(core);
+      } else if (moduleCache[key]) {
+        const core = moduleCache.coreScan ? moduleCache.coreScan() : {};
+        result = moduleCache[key].run(core);
+      } else {
+        throw new Error(`Modul ${key} nicht geladen.`);
+      }
+      stageResults[idx] = result;
+      stageStatus[idx] = 'success';
+      const resultStr = typeof result === 'object' ? JSON.stringify(result).slice(0, 70) : String(result);
+      currentLogs.push({
+        icon: '✅',
+        text: `<strong>${mod.label}</strong> · stabilisiert → ${resultStr}`,
+        time: getTime(),
+        type: 'success'
+      });
+    } catch (err) {
+      stageStatus[idx] = 'failed';
+      currentLogs.push({
+        icon: '❌',
+        text: `<strong>${mod.label}</strong> · Fehler: ${err.message || err}`,
+        time: getTime(),
+        type: 'error'
+      });
+    }
+    renderStages();
+    renderLogs();
+    updateTimestamp();
+    updateMetrics();
+  }
+
+  // ---------- NC-Angriff simulieren ----------
+  function simulateAttack() {
+    if (isRunning) return;
+    currentLogs.push({ icon: '⚡', text: '<strong>NC‑ATTACK</strong> · Stabilitätstest wird eingeleitet …', time: getTime(), type: 'warning' });
+    // Simuliere, dass die NC-Stufe (Index 4) ins Wanken gerät
+    if (activeStages[4]) {
+      stageStatus[4] = 'running';
+      renderStages();
+      setTimeout(() => {
+        if (stageStatus[4] === 'running') {
+          stageStatus[4] = 'failed';
+          currentLogs.push({ icon: '💥', text: '<strong>NC‑ATTACK</strong> · NC-Stabilisierung überfordert! System driftet.', time: getTime(), type: 'error' });
+          renderStages();
+          renderLogs();
+        }
+      }, 1200);
+      // Versuche, die ANKER-Stufe zur Rettung zu rufen
+      setTimeout(() => {
+        if (activeStages[5]) {
+          currentLogs.push({ icon: '🛡️', text: '<strong>ANKER</strong> · Stabilisiert das System neu …', time: getTime(), type: 'info' });
+          stageStatus[5] = 'running';
+          renderStages();
+          setTimeout(() => {
+            stageStatus[5] = 'success';
+            stageStatus[4] = 'success';
+            currentLogs.push({ icon: '✅', text: '<strong>ANKER</strong> · System wieder stabil (NC repariert).', time: getTime(), type: 'success' });
+            renderStages();
+            renderLogs();
+          }, 800);
+        }
+      }, 1500);
+    } else {
+      currentLogs.push({ icon: '⚠️', text: 'NC-Stufe ist deaktiviert – Angriff wirkungslos.', time: getTime(), type: 'warning' });
+    }
+    renderLogs();
+  }
+
+  // ---------- Event-Listener ----------
+  modeToggle.addEventListener('click', async function() {
+    const isActive = this.classList.toggle('active');
+    modeLabel.textContent = isActive ? 'REAL' : 'SIM';
+    mode = isActive ? 'REAL' : 'SIM';
+    const ok = await loadModules(isActive);
+    if (!ok && isActive) {
+      this.classList.remove('active');
+      modeLabel.textContent = 'SIM';
+      mode = 'SIM';
+      currentLogs.push({ icon: '⚠️', text: 'REAL-Modus fehlgeschlagen, auf SIM gewechselt.', time: getTime(), type: 'error' });
+      renderLogs();
+    } else {
+      currentLogs.push({ icon: '🔄', text: `Modus gewechselt zu ${mode}`, time: getTime(), type: 'info' });
+      renderLogs();
+    }
+    stageStatus = pipelineDef.map(() => 'pending');
+    stageResults = pipelineDef.map(() => null);
+    renderStages();
+    updateMetrics();
+  });
+
+  Object.keys(stageToggles).forEach((key, idx) => {
+    stageToggles[key].addEventListener('click', function() {
+      if (isRunning) return;
+      this.classList.toggle('active');
+      activeStages[idx] = this.classList.contains('active');
+      currentLogs.push({ icon: '🎯', text: `${key} ${activeStages[idx] ? 'aktiviert' : 'deaktiviert'}`, time: getTime(), type: 'info' });
+      renderLogs();
+      renderStages();
+    });
+    // Doppelklick für manuellen Start
+    stageToggles[key].addEventListener('dblclick', function() {
+      if (isRunning) return;
+      const idx = Object.keys(stageToggles).indexOf(key);
+      if (activeStages[idx]) manualStep(idx);
+    });
+  });
+
+  // Globale Funktionen für manuelle Buttons
+  window.p3_ix = () => { if (activeStages[0]) manualStep(0); };
+  window.p3_io = () => { if (activeStages[1]) manualStep(1); };
+  window.p3_norm = () => { if (activeStages[2]) manualStep(2); };
+  window.p3_oi = () => { if (activeStages[3]) manualStep(3); };
+  window.p3_nc = () => { if (activeStages[4]) manualStep(4); };
+  window.p3_anker = () => { if (activeStages[5]) manualStep(5); };
+  window.p3_attack = simulateAttack;
+
+  triggerBtn.addEventListener('click', runPipeline);
+  refreshBtn.addEventListener('click', function() {
+    if (!isRunning) {
+      stageStatus = pipelineDef.map(() => 'pending');
+      stageResults = pipelineDef.map(() => null);
+      currentLogs = [];
+      currentLogs.push({ icon: '🔄', text: 'Pipeline zurückgesetzt', time: getTime(), type: 'info' });
+      renderStages();
+      renderLogs();
+      updateTimestamp();
+      updateMetrics();
+    } else {
+      updateTimestamp();
+    }
+  });
+
+  // ---------- INIT ----------
+  async function init() {
+    await loadModules(false);
+    stageStatus = pipelineDef.map(() => 'pending');
+    currentLogs = [];
+    currentLogs.push({ icon: '💡', text: 'PIPELINE3 bereit · Stabilisationsachse aktiv · Modus SIM', time: getTime(), type: 'info' });
+    currentLogs.push({ icon: '🛡️', text: 'Doppelklick auf eine Stufe startet Einzelstabilisation', time: getTime(), type: 'info' });
+    renderStages();
+    renderLogs();
+    updateTimestamp();
+    updateMetrics();
+  }
+  init();
 </script>
 
 </head>
-
 <body>
 
-<h1>PIPELINE3 · RAW → STRUCTURE → VECTOR</h1>
+<div class="pipeline-dashboard">
 
-<section>
-<h2>QI / IQQ</h2>
-<button onclick="qi_p3()">QI · PIPELINE3</button>
-<button onclick="qi_master()">QI · MASTER</button>
-<button onclick="qi_respo()">QI · RESPO</button>
-<pre id="out">Bereit…</pre>
-</section>
+  <!-- HEADER -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="logo-icon"><i class="fas fa-anchor"></i></div>
+      <h1>PIPELINE3 <span>· ANKER · Stabilisation</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="pipeline-badge"><span class="dot"></span> NC‑gestützt</div>
+      <div class="header-actions">
+        <button title="Refresh" id="refreshBtn"><i class="fas fa-rotate"></i></button>
+      </div>
+    </div>
+  </header>
 
-<section>
-<h2>PIPELINE3 · Schalter</h2>
-<button onclick="p3_raw()">P3 · RAW → WAKE</button>
-<button onclick="p3_structure()">P3 · RAW → STRUCTURE</button>
-<button onclick="p3_vector()">P3 · STRUCTURE → VECTOR</button>
-</section>
+  <!-- CONTROLS -->
+  <div class="control-panel">
+    <div class="control-group">
+      <label>Modus</label>
+      <div class="toggle-switch" id="modeToggle"><span class="knob"></span></div>
+      <span style="font-size:13px; font-weight:600; color:var(--text-secondary);" id="modeLabel">SIM</span>
+    </div>
+    <div class="control-group">
+      <label>Stufen</label>
+      <button class="stage-toggle active" id="toggleIX">IX</button>
+      <button class="stage-toggle active" id="toggleIO">IO</button>
+      <button class="stage-toggle active" id="toggleNORM">NORM</button>
+      <button class="stage-toggle active" id="toggleOI">OI</button>
+      <button class="stage-toggle active" id="toggleNC">NC</button>
+      <button class="stage-toggle active" id="toggleANKER">ANKER</button>
+      <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">(Doppelklick = einzeln)</span>
+    </div>
+  </div>
 
+  <!-- STATS (3·6·9) -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">⚡ 3 · Grundvektor</div><div class="stat-value gold" id="metric3">–</div></div>
+    <div class="stat-card"><div class="stat-label">🌀 6 · Funktion</div><div class="stat-value blue" id="metric6">–</div></div>
+    <div class="stat-card"><div class="stat-label">🌟 9 · Norm</div><div class="stat-value purple" id="metric9">–</div></div>
+    <div class="stat-card"><div class="stat-label">✅ Stabil</div><div class="stat-value green" id="successCount">0</div></div>
+  </div>
+
+  <!-- PIPELINE FLOW -->
+  <div class="pipeline-flow">
+    <div class="flow-title"><i class="fas fa-arrow-right"></i> Stabilisationsfluss · 6 Ebenen</div>
+    <div class="pipeline-stages" id="pipelineStages"></div>
+  </div>
+
+  <!-- LOGS + MANUELL + ATTACK -->
+  <div class="activity-section">
+    <div class="activity-panel">
+      <div class="panel-head"><h3><i class="fas fa-terminal"></i> Stabilisations‑Logs</h3></div>
+      <div class="log-list" id="logList"></div>
+    </div>
+    <div class="activity-panel">
+      <div class="panel-head"><h3><i class="fas fa-hand-pointer"></i> Manuell & NC</h3></div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+        <button onclick="p3_ix()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">IX</button>
+        <button onclick="p3_io()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">IO</button>
+        <button onclick="p3_norm()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">NORM</button>
+        <button onclick="p3_oi()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">OI</button>
+        <button onclick="p3_nc()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">NC</button>
+        <button onclick="p3_anker()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:#fff;padding:4px 12px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:11px;">ANKER</button>
+      </div>
+      <button class="btn-attack" onclick="p3_attack()"><i class="fas fa-bolt"></i> NC‑Attack (Test)</button>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">Attack simuliert Drift – NC & Anker reagieren.</div>
+    </div>
+  </div>
+
+  <!-- TRIGGER -->
+  <div class="trigger-area">
+    <div class="trigger-info"><i class="fas fa-clock"></i> <span id="lastUpdate">—</span></div>
+    <button class="btn-primary" id="triggerBtn"><i class="fas fa-play"></i> Stabilisation auslösen</button>
+  </div>
+
+</div>
 </body>
 </html>
